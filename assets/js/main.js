@@ -1,5 +1,7 @@
 var rowList = "";
 
+var environmentPanel = document.querySelector('.staging-environment');
+
 document.querySelector(".jsFilter").addEventListener("click", function () {
     document.querySelector(".filter-menu").classList.toggle("active");
 });
@@ -34,21 +36,14 @@ modeSwitch.addEventListener('click', function () {
 });
 var setServerName = "local";
 var link = "";
-var serverTab = document.querySelectorAll(".server-tab");
-serverTab.forEach(event =>
-    event.addEventListener("click", function () {
-        serverTab.forEach(sTab => sTab.classList.remove("active"));
-        this.classList.add("active");
-        setServerName = this.dataset.server;
-        brandlist.forEach(loadTable);
-    })
-);
 
-brandlist.forEach(loadTable);
-document.querySelector('.products-header').insertAdjacentHTML("afterend", rowList);
-function loadTable(item, index) {
+brandlist.forEach(setTable);
+loadTable();
+loadLinkEvent();
+function setTable(item, index) {
 
     link = `https://${item['sublink']}.kepler.local.sykes.io`;
+
     if (setServerName != 'local') {
         link = `https://${item['sublink']}.${setServerName}.staging.cottage-search.com`
     }
@@ -58,10 +53,10 @@ function loadTable(item, index) {
         imageUrl = `${link}/${item['favicon']}`;
     }
 
-    checkImageState(imageUrl, item['sublink']);
+    // checkImageState(imageUrl, item['sublink']);
 
     rowList += `
-            <div class="products-row" data-link="${link}
+            <div class="products-row" data-link="${link}">
                 <button class="cell-more-button">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -86,11 +81,31 @@ function loadTable(item, index) {
             </div> `;
 }
 
-document.querySelectorAll(".products-row").forEach(brandRow =>
-    brandRow.addEventListener("click", function () {
-        window.open(brandRow.dataset.link, "_blank");
+function loadTable() {
+    document.querySelectorAll('.products-row').forEach(pRow => { pRow.remove(); });
+    document.querySelector('.products-header').insertAdjacentHTML("afterend", rowList);
+    rowList = "";
+}
+
+var serverTab = document.querySelectorAll(".server-tab");
+serverTab.forEach(event =>
+    event.addEventListener("click", function () {
+        serverTab.forEach(sTab => sTab.classList.remove("active"));
+        this.classList.add("active");
+        setServerName = this.dataset.server;
+        brandlist.forEach(setTable);
+        loadTable();
+        loadLinkEvent();
     })
 );
+
+function loadLinkEvent() {
+    document.querySelectorAll(".products-row").forEach(brandRow =>
+        brandRow.addEventListener("click", function () {
+            window.open(brandRow.dataset.link, "_blank");
+        })
+    );
+}
 
 document.querySelectorAll("[data-sidebar-item]").forEach(sidebarItem =>
     sidebarItem.addEventListener("click", function () {
@@ -98,7 +113,15 @@ document.querySelectorAll("[data-sidebar-item]").forEach(sidebarItem =>
             e.classList.remove('active');
         });
         sidebarItem.parentElement.classList.add('active');
-        document.querySelector('.staging-environment').classList.remove('is-hidden');
+        if (this.dataset.sidebarItem == 'staging') {
+            environmentPanel.classList.remove('is-hidden');
+            setServerName = 'tech';
+            brandlist.forEach(setTable);
+            loadTable();
+            loadLinkEvent();
+        } else {
+            environmentPanel.classList.add('is-hidden');
+        }
     })
 );
 
